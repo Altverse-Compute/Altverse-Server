@@ -1,0 +1,51 @@
+{
+  "client": {
+    "fillStyle": "#6f97b1",
+    "strokeStyle": "#4d5784",
+    "areaFill": "#4d5784",
+    "areaAlpha": 0.5
+  },
+  "name": "Tempest Tumult",
+  "areas": [
+    {
+      "enemies": [
+        {
+          "types": ["drop"],
+          "radius": 15,
+          "speed": 10,
+          "count": 10
+        },
+
+        {
+          "types": ["cloud"],
+          "radius": 50,
+          "speed": 5,
+          "count": 10
+        }
+      ],
+      "w": 1920,
+      "h": 480
+    },
+    {
+      "enemies": [
+        {
+          "types": ["drop", "homing"],
+          "radius": 10,
+          "speed": 5,
+          "count": 10
+        },
+        {
+          "types": ["vortex"],
+          "radius": 10,
+          "speed": 0,
+          "count": 1,
+          "x": "60*32/2",
+          "y": "15*32/2",
+          "aura": 960
+        }
+      ],
+      "w": 1920,
+      "h": 480
+    }
+  ]
+}

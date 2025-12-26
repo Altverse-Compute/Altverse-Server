@@ -1,0 +1,61 @@
+{
+  "client": {
+    "fillStyle": "#a4b1c4",
+    "strokeStyle": "#556784",
+    "areaFill": "#556784"
+  },
+  "name": "Snowy Slopes",
+  "areas": [
+    {
+      "enemies": [
+        {
+          "types": ["icicle"],
+          "radius": 15,
+          "speed": 5,
+          "count": 10
+        },
+        {
+          "types": ["tree"],
+          "radius": 30,
+          "speed": 0,
+          "count": 2,
+          "aura": 400
+        },
+        {
+          "types": ["wall"],
+          "radius": 30,
+          "speed": 5,
+          "count": 5
+        }
+      ],
+      "w": 1920,
+      "h": 480
+    },
+    {
+      "enemies": [
+        {
+          "types": ["flame", "homing_sniper", "sniper"],
+          "radius": 15,
+          "speed": 5,
+          "count": 100
+        },
+        {
+          "types": ["tree"],
+          "radius": 30,
+          "speed": 0,
+          "count": 2,
+          "aura": 400
+        },
+        {
+          "types": ["wall"],
+          "radius": 30,
+          "speed": 5,
+          "count": 5
+        }
+      ],
+      "w": 1920,
+      "h": 480,
+      "text": "Huh?"
+    }
+  ]
+}

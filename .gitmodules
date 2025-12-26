@@ -1,0 +1,6 @@
+[submodule "src/proto"]
+	path = src/proto
+	url = https://github.com/Altverse-Compute/Altverse-Proto.git
+[submodule "src/compute"]
+	path = src/compute
+	url = https://github.com/Altverse-Compute/Altverse-Compute.git

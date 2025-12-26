@@ -1,0 +1,6 @@
+{
+  "watch": ["src", "storage"],
+  "ext": "ts,json,yaml,yml",
+  "ignore": ["src/**/*.spec.ts"],
+  "exec": "tsx ./src | pino-pretty"
+}

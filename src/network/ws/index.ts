@@ -49,6 +49,12 @@ export class WebSocketServer {
 
           for (const key of keys) {
             switch (key) {
+              case 'message':
+                coreEvents.emit("message", {
+                  id: client.id,
+                  content: data.message!
+                })
+                break;
               case "keyUp":
                 KeyUp(ws, data.keyUp!);
                 break;
@@ -56,7 +62,6 @@ export class WebSocketServer {
                 KeyDown(ws, data.keyDown!);
                 break;
               case "init":
-                console.log(data.init!)
                 rpc.client.JoinPlayer({
                   token: data.init!.session
                 }, (err, resp) => {

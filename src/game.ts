@@ -1,6 +1,6 @@
-import { ComputeEngine, EngineProps, type Input, JoinProps } from "./compute";
-import { Loader } from "./service/loader.ts";
-import { coreEvents } from "./service/events.ts";
+import {ComputeEngine, EngineProps, type Input, JoinProps} from "./compute";
+import {Loader} from "./service/loader.ts";
+import {coreEvents} from "./service/events.ts";
 
 export class Game {
   engine: ComputeEngine;
@@ -17,6 +17,10 @@ export class Game {
     coreEvents.on("leave", ({ id }) => {
       this.engine.leave(id);
     });
+
+    coreEvents.on("message", ({id, content}) => {
+      this.engine.chatMessage(content, id)
+    })
   }
 
   tick() {

@@ -6,6 +6,7 @@
   "devDependencies": {
     "@types/node": "^25.0.3",
     "nodemon": "^3.1.11",
+    "prettier": "^3.7.4",
     "tsx": "^4.21.0"
   },
   "peerDependencies": {
@@ -23,6 +24,7 @@
   },
   "scripts": {
     "build:compute": "cd src/compute && bun run build",
-    "dev": "nodemon ."
+    "dev": "nodemon .",
+    "fmt": "prettier . --write"
   }
 }

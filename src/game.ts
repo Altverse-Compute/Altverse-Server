@@ -1,27 +1,29 @@
-import {ComputeEngine, EngineProps, type Input, JoinProps} from "./compute";
-import {Loader} from "./service/loader.ts"
-import {coreEvents} from "./service/events.ts";
+import { ComputeEngine, EngineProps, type Input, JoinProps } from "./compute";
+import { Loader } from "./service/loader.ts";
+import { coreEvents } from "./service/events.ts";
 
 export class Game {
-    engine: ComputeEngine
+  engine: ComputeEngine;
 
-    constructor() {
-        this.engine = new ComputeEngine(new EngineProps(Loader.loadConfig(), Loader.loadWorlds()));
+  constructor() {
+    this.engine = new ComputeEngine(
+      new EngineProps(Loader.loadConfig(), Loader.loadWorlds()),
+    );
 
-        coreEvents.on("join", ({name, id}) => {
-            this.engine.join(new JoinProps(name, id))
-        })
+    coreEvents.on("join", ({ name, id }) => {
+      this.engine.join(new JoinProps(name, id));
+    });
 
-        coreEvents.on("leave", ({id}) => {
-            this.engine.leave(id)
-        })
-    }
+    coreEvents.on("leave", ({ id }) => {
+      this.engine.leave(id);
+    });
+  }
 
-    tick() {
-        return this.engine.update() as Record<number, Buffer>
-    }
+  tick() {
+    return this.engine.update() as Record<number, Buffer>;
+  }
 
-    input(id: number, input: Input) {
-        this.engine.input(id, input);
-    }
+  input(id: number, input: Input) {
+    this.engine.input(id, input);
+  }
 }

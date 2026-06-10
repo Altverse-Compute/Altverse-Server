@@ -13,6 +13,7 @@ export class Network {
     const app = new App();
     this.rpc = new RPCClient()
     this.wss = new WebSocketServer(app, this.rpc);
+    this.rpc.interval(this.wss)
     app.listen(Env.port, () => {
       logger.info("Server started at port " + Env.port);
     });

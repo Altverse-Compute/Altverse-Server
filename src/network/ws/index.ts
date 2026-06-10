@@ -1,19 +1,25 @@
-import {Input} from "../../compute";
-import {SHARED_COMPRESSOR, type TemplatedApp, type WebSocket,} from "uWebSockets.js";
-import {logger} from "../../service/logger.ts";
-import {clientMessageValidate} from "../../service/validate.ts";
-import type {ClientMessage} from "./types.ts";
-import {KeyDown} from "./handlers/keydown.ts";
-import {KeyUp} from "./handlers/keyup.ts";
-import {MousePos} from "./handlers/mousepos.ts";
-import {MouseEnable} from "./handlers/mouseenable.ts";
-import {Ability} from "./handlers/ability.ts";
-import {coreEvents} from "../../service/events.ts";
-import type {RPCClient} from "../rpc";
+import { Input } from "../../compute";
+import {
+  SHARED_COMPRESSOR,
+  type TemplatedApp,
+  type WebSocket,
+} from "uWebSockets.js";
+import { logger } from "../../service/logger.ts";
+import { clientMessageValidate } from "../../service/validate.ts";
+import type { ClientMessage } from "./types.ts";
+import { KeyDown } from "./handlers/keydown.ts";
+import { KeyUp } from "./handlers/keyup.ts";
+import { MousePos } from "./handlers/mousepos.ts";
+import { MouseEnable } from "./handlers/mouseenable.ts";
+import { Ability } from "./handlers/ability.ts";
+import { coreEvents } from "../../service/events.ts";
+import type { RPCClient } from "../rpc";
+import type { JoinPlayerResponse__Output } from "@proto/src/proto/generated/ts/connection/JoinPlayerResponse.ts";
 
 export interface Client {
   id: number;
   input: Input;
+  accountId: string;
 }
 
 export class WebSocketServer {
@@ -49,11 +55,11 @@ export class WebSocketServer {
 
           for (const key of keys) {
             switch (key) {
-              case 'message':
+              case "message":
                 coreEvents.emit("message", {
                   id: client.id,
-                  content: data.message!
-                })
+                  content: data.message!,
+                });
                 break;
               case "keyUp":
                 KeyUp(ws, data.keyUp!);
@@ -62,21 +68,29 @@ export class WebSocketServer {
                 KeyDown(ws, data.keyDown!);
                 break;
               case "init":
-                rpc.client.JoinPlayer({
-                  token: data.init!.session
-                }, (err, resp) => {
-                  if (err)  {
-                    console.log(err)
-                    ws.close();
-                    return;
-                  }
-                  console.log(resp)
-                  coreEvents.emit("join", {
-                    id: client.id,
-                    name: resp.name,
-                    role: resp.role,
-                  });
-                })
+                try {
+                  rpc.client.JoinPlayer(
+                    {
+                      token: data.init!.session,
+                    },
+                    rpc.metadata,
+                    (err, resp) => {
+                      if (err) {
+                        console.log(err);
+                        ws.close();
+                        return;
+                      }
+                      client.accountId = resp.id!;
+                      coreEvents.emit("join", {
+                        id: client.id,
+                        name: resp!.name!,
+                        role: resp!.role!,
+                      });
+                    },
+                  );
+                } catch {
+                  ws.close();
+                }
                 break;
               case "mousePos":
                 MousePos(ws, data.mousePos!);
@@ -101,6 +115,7 @@ export class WebSocketServer {
       },
     });
   }
+
   async tick(packages: Record<number, Buffer>) {
     for (const [id, client] of this.clients) {
       const pkg = packages[id]!;

@@ -13,7 +13,7 @@ function getEnv(key: string, fallback?: string): string {
 
 export const Env = {
   port: Number(getEnv("PORT", "7001")),
-  rpcHost: Number(getEnv("GRPC_HOST", "localhost:7030")),
+  rpcHost: getEnv("GRPC_HOST", "localhost:7030"),
   frontendUrl: getEnv("FRONTEND_URL", "http://localhost:7010"),
   mode: getEnv("MODE", "dev"),
   tickRate: Number(getEnv("TICK_RATE", "60")),

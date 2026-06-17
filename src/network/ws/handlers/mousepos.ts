@@ -1,7 +1,9 @@
-import { type WebSocket } from "uWebSockets.js";
 import { type Client } from "..";
 
-export const MousePos = (ws: WebSocket<Client>, pos: [number, number]) => {
-  ws.getUserData().input.setMousePosX(pos[0]);
-  ws.getUserData().input.setMousePosY(pos[1]);
+export const MousePos = (
+  ws: Bun.ServerWebSocket<Client>,
+  pos: [number, number],
+) => {
+  ws.data.input.setMousePosX(pos[0]);
+  ws.data.input.setMousePosY(pos[1]);
 };

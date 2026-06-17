@@ -1,6 +1,7 @@
-import {ComputeEngine, EngineProps, type Input, JoinProps} from "./compute";
-import {Loader} from "./service/loader.ts";
-import {coreEvents} from "./service/events.ts";
+import { ComputeEngine, EngineProps, type Input, JoinProps } from "./compute";
+import { Loader } from "./util/loader.ts";
+import { coreEvents } from "./util/events.ts";
+import { logger } from "./util/logger.ts";
 
 export class Game {
   engine: ComputeEngine;
@@ -12,15 +13,18 @@ export class Game {
 
     coreEvents.on("join", ({ name, id }) => {
       this.engine.join(new JoinProps(name, id));
+      logger.info(`Joined: ${name}. Id: ${id}`);
     });
 
     coreEvents.on("leave", ({ id }) => {
       this.engine.leave(id);
+      logger.info(`Leave: ${id}`);
     });
 
-    coreEvents.on("message", ({id, content}) => {
-      this.engine.chatMessage(content, id)
-    })
+    coreEvents.on("message", ({ id, content }) => {
+      this.engine.chatMessage(content, id);
+      logger.info(`Leave: ${name}. Id: ${id}`);
+    });
   }
 
   tick() {

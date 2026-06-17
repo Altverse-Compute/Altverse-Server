@@ -1,7 +1,7 @@
 import { Network } from "./network";
 import { Game } from "./game.ts";
-import { Env } from "./service/env.ts";
-import { logger } from "./service/logger.ts";
+import { Env } from "./util/env.ts";
+import { logger } from "./util/logger.ts";
 
 logger.info(`
    ___   ____                               

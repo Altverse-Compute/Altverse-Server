@@ -1,3 +1,5 @@
+import { game } from "@proto/js/index.d.ts";
+
 export interface Input {
   left?: boolean;
   right?: boolean;

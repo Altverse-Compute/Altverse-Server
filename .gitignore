@@ -95,6 +95,8 @@ dist
 .temp
 .cache
 
+storage/worlds/*
+
 # Sveltekit cache directory
 .svelte-kit/
 
@@ -121,6 +123,9 @@ dist
 
 # TernJS port file
 .tern-port
+
+*.cert
+*.pem
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test

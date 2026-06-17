@@ -1,9 +1,8 @@
-import { type WebSocket } from "uWebSockets.js";
 import { type Client } from "..";
 
-export const KeyUp = (ws: WebSocket<Client>, key: string) => {
+export const KeyUp = (ws: Bun.ServerWebSocket<Client>, key: string) => {
   const accessedKeys = ["left", "right", "up", "down", "shift"];
-  const input = ws.getUserData().input;
+  const input = ws.data.input;
   if (accessedKeys.includes(key)) {
     switch (key) {
       case "down":

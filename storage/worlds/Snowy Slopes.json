@@ -9,13 +9,13 @@
     {
       "enemies": [
         {
-          "types": ["icicle"],
+          "types": ["slow"],
           "radius": 15,
           "speed": 5,
           "count": 10
         },
         {
-          "types": ["tree"],
+          "types": ["draining"],
           "radius": 30,
           "speed": 0,
           "count": 2,

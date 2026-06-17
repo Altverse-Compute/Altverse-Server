@@ -28,11 +28,7 @@ export class RPCClient {
     else {
       const certificates = loadCertificate();
 
-      credentials = grpc.ChannelCredentials.createSsl(
-        certificates.root,
-        certificates.clientKey,
-        certificates.client,
-      );
+      credentials = grpc.ChannelCredentials.createSsl(certificates.cert);
     }
 
     this.client = new proto.Game(Env.rpcHost, credentials) as GameClient;

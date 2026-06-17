@@ -23,8 +23,5 @@ export const Env = {
     "GRPC_TOKEN",
     "3a062bbbd9a14770638cb2ba0306d9577f5c0c904ebc48824f1c1a4bb1062eca",
   ),
-  selfSignedCertificates: getEnv("SELF_SIGNED_CERTIFICATES", "true") === "true",
-  clientKeyCertFileName: getEnv("CLIENT_KEY_PEM", "client-key.pem"),
-  clientCertFileName: getEnv("CLIENT_PEM", "client.pem"),
-  rootCertFileName: getEnv("ROOT_PEM", "root.pem"),
+  certFileName: getEnv("CLIENT_KEY_PEM", "cert.pem"),
 };

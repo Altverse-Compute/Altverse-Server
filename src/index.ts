@@ -16,7 +16,7 @@ const game = new Game();
 
 const tick = () => {
   for (const [index, client] of network.wss.clients) {
-    game.input(index, client.getUserData().input);
+    game.input(index, client.data.input);
   }
   network.wss.tick(game.tick());
   setTimeout(tick, 1000 / Env.tickRate);

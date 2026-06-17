@@ -1,4 +1,4 @@
-import grpc from "@grpc/grpc-js";
+import grpc, { Metadata } from "@grpc/grpc-js";
 import { loadSync } from "@grpc/proto-loader";
 import path from "path";
 import type { WebSocketServer } from "../ws";
@@ -54,16 +54,19 @@ export class RPCClient {
         }
         if (response) {
           this.metadata.add("token", response!.session!);
+          logger.info({
+            authentication: true,
+          });
           logger.info("RPC: Authentication successful");
         }
       },
     );
   }
 
-  AwardPlayer(id: string, vp: number, accessory: string) {
+  AwardPlayer(databaseId: string, vp: number, accessory: string) {
     this.client.AwardPlayer(
       {
-        id,
+        id: databaseId,
         vp,
         accessory,
       },
@@ -78,20 +81,30 @@ export class RPCClient {
             code: err.code,
           });
         } else {
-          logger.info("RPC: Award Player with id " + id + " was successfully");
+          logger.info({
+            award: {
+              databaseId: databaseId,
+              vp,
+              accessory,
+            },
+          });
         }
       },
     );
   }
 
   interval(wss: WebSocketServer) {
+    let metadata: Metadata | undefined;
     setInterval(() => {
+      if (!metadata) {
+        metadata = this.metadata.clone();
+      }
       this.client.Ping(
         {
           online: wss.clients.size,
           alive: true,
         },
-        this.metadata,
+        metadata,
         (
           err?: (grpc.ServiceError & typeof AuthenticationFailed) | null,
           _?: PongResponse,
@@ -105,6 +118,6 @@ export class RPCClient {
           }
         },
       );
-    }, 5000);
+    }, 1000);
   }
 }

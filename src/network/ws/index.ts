@@ -26,6 +26,7 @@ export class WebSocketServer {
   playersSessionTokens: string[] = [];
 
   constructor(rpc: RPCClient) {
+    rpc.interval(this);
     Bun.serve({
       fetch: async (req, server) => {
         if (!req.headers)
@@ -70,16 +71,17 @@ export class WebSocketServer {
               client.role = response.role!;
               client.name = response.name!;
 
-              rpc.AwardPlayer(response.id!, 1, "");
-
               const upgraded = server.upgrade(req, { data: client });
               resolve(upgraded);
             });
           });
           if (upgradeSuccess) {
-            logger.info(
-              `User authenticated. db name: ${client.name}, id: ${client.id}`,
-            );
+            logger.info({
+              newConnection: {
+                username: client.name,
+                id: client.id,
+              },
+            });
             return undefined;
           } else {
             return new Response("Authentication or Upgrade failed", {
@@ -95,10 +97,12 @@ export class WebSocketServer {
       websocket: {
         data: {} as Client,
         idleTimeout: 10,
-        message(
+        perMessageDeflate: true,
+        maxPayloadLength: 1024,
+        message: (
           ws: Bun.ServerWebSocket<Client>,
           msg: string | Buffer<ArrayBuffer>,
-        ) {
+        ) => {
           try {
             const rawData = JSON.parse(msg.toString());
             const valid = clientMessageValidate(rawData);
@@ -119,6 +123,7 @@ export class WebSocketServer {
                   coreEvents.emit("message", {
                     id: client.id,
                     content: data.message!,
+                    username: client.name,
                   });
                   break;
                 case "keyUp":
@@ -134,6 +139,7 @@ export class WebSocketServer {
                       name: client.name,
                       role: client.role,
                     });
+                    this.clients.set(client.id, ws);
                   } catch {
                     ws.close();
                   }
@@ -158,18 +164,19 @@ export class WebSocketServer {
             this.playersSessionTokens = this.playersSessionTokens.filter(
               (token) => token !== client.sessionToken,
             );
-            logger.info(`Client ${client.id} disconnected`);
-            coreEvents.emit("leave", { id: client.id });
+            coreEvents.emit("leave", { id: client.id, username: client.name });
           }
         },
       },
     });
   }
 
-  async tick(packages: Record<number, Buffer>) {
+  tick(packages: Record<number, Buffer>) {
     for (const [id, client] of this.clients) {
       const pkg = packages[id]!;
-      if (pkg) client.send(pkg, true);
+      if (pkg) {
+        client.send(pkg.buffer, true);
+      }
     }
   }
 }

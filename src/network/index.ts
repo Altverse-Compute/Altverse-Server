@@ -9,6 +9,5 @@ export class Network {
     // @ts-ignore
     this.rpc = new RPCClient();
     this.wss = new WebSocketServer(this.rpc);
-    this.rpc.interval(this.wss);
   }
 }

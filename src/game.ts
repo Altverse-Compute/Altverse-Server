@@ -12,18 +12,35 @@ export class Game {
     );
 
     coreEvents.on("join", ({ name, id }) => {
-      this.engine.join(new JoinProps(name, id));
-      logger.info(`Joined: ${name}. Id: ${id}`);
+      const join = new JoinProps(name, id);
+      this.engine.join(join);
+      logger.info({
+        joined: {
+          username: name,
+          id,
+        },
+      });
     });
 
-    coreEvents.on("leave", ({ id }) => {
+    coreEvents.on("leave", ({ id, username }) => {
       this.engine.leave(id);
-      logger.info(`Leave: ${id}`);
+      logger.info({
+        leave: {
+          id,
+          username,
+        },
+      });
     });
 
-    coreEvents.on("message", ({ id, content }) => {
+    coreEvents.on("message", ({ id, content, username }) => {
       this.engine.chatMessage(content, id);
-      logger.info(`Leave: ${name}. Id: ${id}`);
+      logger.info({
+        chatMessage: {
+          id,
+          username,
+          content,
+        },
+      });
     });
   }
 

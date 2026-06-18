@@ -20,10 +20,14 @@
     "noPropertyAccessFromIndexSignature": false,
 
     "baseUrl": ".",
-    "types": ["bun", "node", "ws", "uuid"],
+    "types": ["bun", "node", "ws", "uuid", "@fastify/websocket"],
     "paths": {
       "@proto/*": ["src/proto/generated/*"],
-      "@compute/*": ["src/compute/*"]
+      "@compute/*": ["src/compute/*"],
+      "@plugins/*": ["src/plugins/*"],
+      "@routes/*": ["src/routes/*"],
+      "@util/*": ["src/util/*"],
+      "@/*": ["src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.js"],

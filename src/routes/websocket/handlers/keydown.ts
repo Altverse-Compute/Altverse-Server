@@ -1,8 +1,8 @@
-import { type Client } from "..";
+import type { FastifyRequest } from "fastify";
 
-export const KeyDown = (ws: Bun.ServerWebSocket<Client>, key: string) => {
+export const KeyDown = (req: FastifyRequest, key: string) => {
   const accessedKeys = ["left", "right", "up", "down", "shift"];
-  const input = ws.data.input;
+  const input = req.input;
   if (accessedKeys.includes(key)) {
     switch (key) {
       case "down":

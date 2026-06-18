@@ -26,13 +26,20 @@ const storagePlugin = (fastify: FastifyInstance) => {
     worlds.push(file);
   }
 
+  const loadCert = (path: string) => {
+    if (fs.existsSync(path)) {
+      return fs.readFileSync(path)
+    }
+    return Buffer.from([])
+  }
+
   fastify.decorate("storage", {
     config,
     worlds,
     certs: {
-      caCrt: fs.readFileSync(path.join(fastify.env.caCert)),
-      clientKey: fs.readFileSync(path.join(fastify.env.clientKey)),
-      clientCrt: fs.readFileSync(path.join(fastify.env.clientCert)),
+      caCrt: loadCert(fastify.env.caCert),
+      clientKey: loadCert(fastify.env.clientKey),
+      clientCrt: loadCert(fastify.env.clientCert),
     },
   });
 };

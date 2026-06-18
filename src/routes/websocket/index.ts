@@ -8,15 +8,15 @@ import { MousePos } from "@routes/websocket/handlers/mousepos.ts";
 import { MouseEnable } from "@routes/websocket/handlers/mouseenable.ts";
 import { Ability } from "@routes/websocket/handlers/ability.ts";
 import { clientMessageValidate } from "@routes/websocket/validate.ts";
+import fp from "fastify-plugin"
 
-export const wsRoutes = (fastify: FastifyInstance) => {
+export const wsRoutes = fp((fastify: FastifyInstance) => {
   let nextId = 0;
   let playerSessionTokens: string[] = [];
 
   fastify.route({
     method: "GET",
     url: "/",
-    websocket: true,
     config: {
       rateLimit: {
         max: 3,
@@ -26,24 +26,25 @@ export const wsRoutes = (fastify: FastifyInstance) => {
     handler(req, res) {
       res.send("What hello there");
     },
-    async wsHandler(connection, req) {
+    wsHandler: async (socket, req) => {
       try {
-        const cookieHeader = req.headers.cookie || "";
-        const match = cookieHeader.match(/token=([^;]+)/);
+        const server = req.server;
 
-        const ws = connection.socket;
+        const cookieHeader = req.headers.cookie || "";
+        const match = cookieHeader.match(/token=([\w\d]+)./);
 
         if (!match) {
-          connection.close(4001, "Unauthorized: No token");
+          socket.close(4001, "Unauthorized: No token");
           return;
         }
 
         const token = match[1];
+        console.log(token)
 
         playerSessionTokens.push(token);
 
         const joinData: JoinPlayerResponse__Output =
-          await ws.rpc.joinPlayer(token);
+          await server.rpc.joinPlayer(token);
 
         req.name = joinData.name!;
         req.sid = nextId++;
@@ -62,15 +63,15 @@ export const wsRoutes = (fastify: FastifyInstance) => {
           "incoming websocket request verified",
         );
 
-        ws.send(Buffer.from([0x33, 0x33, 0x33]));
+        server.transfer.addClient(req.sid, socket, req.input);
 
-        ws.on("message", (msg: Uint8Array, isunary: boolean) => {
+        socket.on("message", (msg: Uint8Array, isunary: boolean) => {
           try {
             const rawData = JSON.parse(msg.toString());
             const valid = clientMessageValidate(rawData);
 
             if (!valid) {
-              ws.close();
+              socket.close();
             }
 
             const data = rawData as ClientMessage;
@@ -80,7 +81,7 @@ export const wsRoutes = (fastify: FastifyInstance) => {
             for (const key of keys) {
               switch (key) {
                 case "message":
-                  ws.engine.chatMessage(req.name, req.sid, data.message!);
+                  server.engine.chatMessage(req.name, req.sid, data.message!);
                   break;
                 case "keyUp":
                   KeyUp(req, data.keyUp!);
@@ -90,9 +91,9 @@ export const wsRoutes = (fastify: FastifyInstance) => {
                   break;
                 case "init":
                   try {
-                    ws.engine.join(req.name, req.sid);
+                    server.engine.join(req.name, req.sid);
                   } catch {
-                    ws.close();
+                    socket.close();
                   }
                   break;
                 case "mousePos":
@@ -108,10 +109,15 @@ export const wsRoutes = (fastify: FastifyInstance) => {
             }
           } catch {}
         });
+        
+        socket.on("close", () => {
+          server.transfer.remClient(req.sid)
+        })
       } catch (e) {
+        console.error(e)
         req.log.error(e, "WS Auth Error");
-        connection.close(1011, "Internal Server Error");
+        socket.close(1011, "Internal Server Error");
       }
     },
   });
-};
+})

@@ -6,11 +6,13 @@ import enginePlugin from "@plugins/engine";
 import { wsRoutes } from "@routes/websocket";
 import dotenv from "dotenv";
 import cors from "@fastify/cors";
+import weboscket from "@fastify/websocket";
+import transferPlugin from "@/plugins/transfer"
 
 dotenv.config();
 
 const app = Fastify({
-  logger: process.env.NODE_ENV === "development",
+  logger: true,
 });
 
 console.log(`
@@ -26,7 +28,13 @@ console.log(`
   await app.register(storagePlugin);
   await app.register(rpcPlugin);
   await app.register(enginePlugin);
+  await app.register(transferPlugin);
 
+  await app.register(weboscket, {
+    options: {
+      maxPayload: 1024 * 12
+    }
+  });
   await app.register(cors, {
     origin: app.env.frontendUrl,
     credentials: true,
@@ -45,12 +53,18 @@ console.log(`
       port: app.env.port,
     })
     .then(console.log);
+
+  const tick = () => {
+    const clients = app.transfer.getClients();
+    for (const [index, client] of clients) {
+      app.engine.input(index, client.input);
+    }
+    const packages = app.engine.tick();
+    for (const [id, client] of clients) {
+        const pkg = packages[id]!;
+        if (pkg)   app.transfer.sendPackageToClient(id, pkg)
+      }
+    setTimeout(tick, 1000 / app.env.tickRate);
+  };
+  tick();
 })();
-// const tick = () => {
-//   for (const [index, client] of network.wss.clients) {
-//     engine.input(index, client.data.input);
-//   }
-//   network.wss.tick(engine.tick());
-//   setTimeout(tick, 1000 / Env.tickRate);
-// };
-// tick();

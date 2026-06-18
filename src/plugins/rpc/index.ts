@@ -32,10 +32,7 @@ async function rpcPlugin(fastify: FastifyInstance) {
     );
   }
 
-  const client = new proto.Game(fastify.env.rpcHost, credentials, {
-    "grpc.ssl_target_name_override": "localhost",
-    "grpc.default_authority": "localhost",
-  }) as GameClient;
+  const client = new proto.Game(fastify.env.rpcHost, credentials, {}) as GameClient;
 
   const pingInterval = () => {
     client.Ping(

@@ -2,6 +2,7 @@ import { FastifyInstance as FI } from "fastify";
 import "@fastify/websocket";
 import type { Input } from "@/compute";
 import type { Role__Output } from "@proto/ts/game/Role.ts";
+import type { WebSocket } from "@fastify/websocket";
 
 declare module "fastify" {
   interface RPCDecoration {
@@ -61,8 +62,17 @@ declare module "fastify" {
     role: Role__Output;
   }
 
-  interface WebSocketDecoration {
-    clientsCount: number;
+  interface TrasnferDecotraion {
+    getClientsCount: () => number;
+    sendPackageToClient: (clientId: number, buffer: Buffer) => void;
+    getClients: () => Map<number, TransfertClient>;
+    addClient: (clientId: number, socket: WebSocket, input: Input) => void;
+    remClient: (clientId: number) => void;
+  }
+
+  export interface TransfertClient {
+    socket: WebSocket;
+    input: Input;
   }
 
   interface FastifyInstance extends FI {
@@ -70,6 +80,6 @@ declare module "fastify" {
     env: EnvDecoration;
     storage: StorageDecoration;
     engine: EngineDecoration;
-    ws: WebSocketDecoration;
+    transfer: TrasnferDecotraion;
   }
 }

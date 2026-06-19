@@ -8,7 +8,7 @@ import { MousePos } from "@routes/websocket/handlers/mousepos.ts";
 import { MouseEnable } from "@routes/websocket/handlers/mouseenable.ts";
 import { Ability } from "@routes/websocket/handlers/ability.ts";
 import { clientMessageValidate } from "@routes/websocket/validate.ts";
-import fp from "fastify-plugin"
+import fp from "fastify-plugin";
 
 export const wsRoutes = fp((fastify: FastifyInstance) => {
   let nextId = 0;
@@ -39,7 +39,6 @@ export const wsRoutes = fp((fastify: FastifyInstance) => {
         }
 
         const token = match[1];
-        console.log(token)
 
         playerSessionTokens.push(token);
 
@@ -109,15 +108,16 @@ export const wsRoutes = fp((fastify: FastifyInstance) => {
             }
           } catch {}
         });
-        
+
         socket.on("close", () => {
-          server.transfer.remClient(req.sid)
-        })
+          server.transfer.remClient(req.sid);
+          server.engine.leave(req.name, req.sid);
+        });
       } catch (e) {
-        console.error(e)
+        console.error(e);
         req.log.error(e, "WS Auth Error");
         socket.close(1011, "Internal Server Error");
       }
     },
   });
-})
+});

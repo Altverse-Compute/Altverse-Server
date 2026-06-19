@@ -37,7 +37,7 @@ async function rpcPlugin(fastify: FastifyInstance) {
   const pingInterval = () => {
     client.Ping(
       {
-        online: 0,
+        online: fastify.transfer.getClientsCount(),
         alive: true,
       },
       metadata,

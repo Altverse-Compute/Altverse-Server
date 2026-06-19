@@ -3,6 +3,7 @@ import "@fastify/websocket";
 import type { Input } from "@/compute";
 import type { Role__Output } from "@proto/ts/game/Role.ts";
 import type { WebSocket } from "@fastify/websocket";
+import type { http } from "@proto/js";
 
 declare module "fastify" {
   interface RPCDecoration {
@@ -44,6 +45,7 @@ declare module "fastify" {
     config: string;
     certs: Certificates;
     worlds: string[];
+    worldsToSend: Uint8Array;
   }
 
   interface EngineDecoration {

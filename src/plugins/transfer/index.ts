@@ -2,12 +2,11 @@ import type { FastifyInstance, TransfertClient } from "fastify"
 import fp from "fastify-plugin"
 
 const transferPlugin = (fastify: FastifyInstance) => {
-    let clientsCount = 0;
     let clients: Map<number, TransfertClient> = new Map()
 
     fastify.decorate("transfer", {
         getClientsCount() {
-            return clientsCount
+            return clients.size
         },
         sendPackageToClient(clientId, buffer) {
             const client = clients.get(clientId)

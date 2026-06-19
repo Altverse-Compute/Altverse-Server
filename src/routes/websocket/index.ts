@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { JoinPlayerResponse__Output } from "@proto/ts/connection/JoinPlayerResponse.ts";
 import { Input } from "@/compute";
 import type { ClientMessage } from "@routes/websocket/types.ts";
@@ -9,10 +9,35 @@ import { MouseEnable } from "@routes/websocket/handlers/mouseenable.ts";
 import { Ability } from "@routes/websocket/handlers/ability.ts";
 import { clientMessageValidate } from "@routes/websocket/validate.ts";
 import fp from "fastify-plugin";
+import { game } from "@proto/js";
 
 export const wsRoutes = fp((fastify: FastifyInstance) => {
   let nextId = 0;
   let playerSessionTokens: string[] = [];
+
+  const messageHandlers: Record<
+    string,
+    (req: FastifyRequest, data: game.ClientMessage) => void
+  > = {
+    chatMessage: (req, data) => {
+      fastify.engine.chatMessage(req.name, req.sid, data.chatMessage!);
+    },
+    keyUp: (req, data) => {
+      KeyUp(req, data.keyUp!);
+    },
+    init: (req, data) => {
+      fastify.engine.join(req.name, req.sid);
+    },
+    mousePos: (req, data) => {
+      MousePos(req, data.mousePos!);
+    },
+    mouseEnable: (req, data) => {
+      MouseEnable(req, data.mouseEnable!);
+    },
+    ability: (req, data) => {
+      Ability(req, data.ability!);
+    },
+  };
 
   fastify.route({
     method: "GET",
@@ -28,6 +53,7 @@ export const wsRoutes = fp((fastify: FastifyInstance) => {
     },
     wsHandler: async (socket, req) => {
       try {
+        console.log("connection");
         const server = req.server;
 
         const cookieHeader = req.headers.cookie || "";
@@ -66,47 +92,23 @@ export const wsRoutes = fp((fastify: FastifyInstance) => {
 
         socket.on("message", (msg: Uint8Array, isunary: boolean) => {
           try {
-            const rawData = JSON.parse(msg.toString());
-            const valid = clientMessageValidate(rawData);
+            const data = game.ClientMessage.decode(msg);
+            const valid = clientMessageValidate(data);
 
             if (!valid) {
               socket.close();
             }
 
-            const data = rawData as ClientMessage;
-
             const keys = Object.keys(data);
 
             for (const key of keys) {
-              switch (key) {
-                case "message":
-                  server.engine.chatMessage(req.name, req.sid, data.message!);
-                  break;
-                case "keyUp":
-                  KeyUp(req, data.keyUp!);
-                  break;
-                case "keyDown":
-                  KeyDown(req, data.keyDown!);
-                  break;
-                case "init":
-                  try {
-                    server.engine.join(req.name, req.sid);
-                  } catch {
-                    socket.close();
-                  }
-                  break;
-                case "mousePos":
-                  MousePos(req, data.mousePos!);
-                  break;
-                case "mouseEnable":
-                  MouseEnable(req, data.mouseEnable!);
-                  break;
-                case "ability":
-                  Ability(req, data.ability!);
-                  break;
-              }
+              const handler = messageHandlers[key];
+              if (handler != undefined) handler(req, data);
+              else req.log.error(`Unregistered message handler ${key}`);
             }
-          } catch {}
+          } catch (e) {
+            console.error(e);
+          }
         });
 
         socket.on("close", () => {

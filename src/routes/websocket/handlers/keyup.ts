@@ -1,25 +1,23 @@
+import { game } from "@proto/js";
 import type { FastifyRequest } from "fastify";
 
-export const KeyUp = (req: FastifyRequest, key: string) => {
-  const accessedKeys = ["left", "right", "up", "down", "shift"];
+export const KeyUp = (req: FastifyRequest, key: game.ClientKey) => {
   const input = req.input;
-  if (accessedKeys.includes(key)) {
-    switch (key) {
-      case "down":
-        input.setDown(false);
-        break;
-      case "left":
-        input.setLeft(false);
-        break;
-      case "right":
-        input.setRight(false);
-        break;
-      case "up":
-        input.setUp(false);
-        break;
-      case "shift":
-        input.setShift(false);
-        break;
-    }
+  switch (key) {
+    case game.ClientKey.DOWN:
+      input.setDown(false);
+      break;
+    case game.ClientKey.LEFT:
+      input.setLeft(false);
+      break;
+    case game.ClientKey.RIGHT:
+      input.setRight(false);
+      break;
+    case game.ClientKey.UP:
+      input.setUp(false);
+      break;
+    case game.ClientKey.SHIFT:
+      input.setShift(false);
+      break;
   }
 };

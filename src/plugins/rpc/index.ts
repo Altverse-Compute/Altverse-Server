@@ -32,7 +32,11 @@ async function rpcPlugin(fastify: FastifyInstance) {
     );
   }
 
-  const client = new proto.Game(fastify.env.rpcHost, credentials, {}) as GameClient;
+  const client = new proto.Game(
+    fastify.env.rpcHost,
+    credentials,
+    {},
+  ) as GameClient;
 
   const pingInterval = () => {
     client.Ping(
@@ -64,6 +68,7 @@ async function rpcPlugin(fastify: FastifyInstance) {
     client.Authentication(
       {
         token: fastify.env.rpcToken,
+        id: fastify.env.rpcId,
       },
       (err, response) => {
         if (err) {

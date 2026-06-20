@@ -26,6 +26,7 @@ declare module "fastify" {
     storagePath: string;
     worldsPath: string;
 
+    rpcId: string;
     rpcToken: string;
     rpcHost: string;
     rpcPingInterval: number;

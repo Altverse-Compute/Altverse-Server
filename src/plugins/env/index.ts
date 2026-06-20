@@ -23,6 +23,7 @@ const envPlugin = (fastify: FastifyInstance) => {
     storagePath: env("STORAGE_PATH", "storage"),
     worldsPath: env("WORLDS_PATH", "worlds"),
 
+    rpcId: env("RPC_ID"),
     rpcToken: env("RPC_TOKEN"),
     rpcHost: env("RPC_HOST", "localhost:7030"),
     rpcPingInterval: Number(env("RPC_PING_INTERVAL", "5000")),

@@ -1,7 +1,7 @@
-import type { game } from "@proto/js";
+import type { ClientMousePos } from "@proto/game_pb";
 import type { FastifyRequest } from "fastify";
 
-export const MousePos = (req: FastifyRequest, pos: game.IClientMousePos) => {
+export const MousePos = (req: FastifyRequest, pos: ClientMousePos) => {
   req.input.setMousePosX(pos!.x!);
   req.input.setMousePosY(pos!.y!);
 };

@@ -1,22 +1,23 @@
-import { game } from "@proto/js";
+import { ClientKey } from "@proto/game_pb";
 import type { FastifyRequest } from "fastify";
 
-export const KeyDown = (req: FastifyRequest, key: game.ClientKey) => {
+export const KeyDown = (req: FastifyRequest, key: ClientKey) => {
   const input = req.input;
+
   switch (key) {
-    case game.ClientKey.DOWN:
+    case ClientKey.DOWN:
       input.setDown(true);
       break;
-    case game.ClientKey.LEFT:
+    case ClientKey.LEFT:
       input.setLeft(true);
       break;
-    case game.ClientKey.RIGHT:
+    case ClientKey.RIGHT:
       input.setRight(true);
       break;
-    case game.ClientKey.UP:
+    case ClientKey.UP:
       input.setUp(true);
       break;
-    case game.ClientKey.SHIFT:
+    case ClientKey.SHIFT:
       input.setShift(true);
       break;
   }

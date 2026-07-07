@@ -1,5 +1,4 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import type { JoinPlayerResponse__Output } from "@proto/ts/connection/JoinPlayerResponse.ts";
 import { Input } from "@/compute";
 import type { ClientMessage } from "@routes/websocket/types.ts";
 import { KeyUp } from "@routes/websocket/handlers/keyup.ts";
@@ -9,33 +8,40 @@ import { MouseEnable } from "@routes/websocket/handlers/mouseenable.ts";
 import { Ability } from "@routes/websocket/handlers/ability.ts";
 import { clientMessageValidate } from "@routes/websocket/validate.ts";
 import fp from "fastify-plugin";
-import { game } from "@proto/js";
+import * as game from "@proto/game_pb";
+import type { JoinPlayerResponse } from "@proto/rpc_pb";
+import { createValidator } from "@bufbuild/protovalidate";
+import { fromBinary } from "@bufbuild/protobuf";
 
 export const wsRoutes = fp((fastify: FastifyInstance) => {
   let nextId = 0;
   let playerSessionTokens: string[] = [];
+  const validation = createValidator();
 
   const messageHandlers: Record<
     string,
-    (req: FastifyRequest, data: game.ClientMessage) => void
+    (req: FastifyRequest, data: unknown) => void
   > = {
     chatMessage: (req, data) => {
-      fastify.engine.chatMessage(req.name, req.sid, data.chatMessage!);
+      fastify.engine.chatMessage(req.name, req.sid, data as string);
+    },
+    keyDown: (req, data) => {
+      KeyDown(req, data as game.ClientKey);
     },
     keyUp: (req, data) => {
-      KeyUp(req, data.keyUp!);
+      KeyUp(req, data as game.ClientKey);
     },
-    init: (req, data) => {
+    init: (req, _) => {
       fastify.engine.join(req.name, req.sid);
     },
     mousePos: (req, data) => {
-      MousePos(req, data.mousePos!);
+      MousePos(req, data as game.ClientMousePos);
     },
     mouseEnable: (req, data) => {
-      MouseEnable(req, data.mouseEnable!);
+      MouseEnable(req, data as boolean);
     },
     ability: (req, data) => {
-      Ability(req, data.ability!);
+      Ability(req, data as game.ClientAbility);
     },
   };
 
@@ -53,7 +59,6 @@ export const wsRoutes = fp((fastify: FastifyInstance) => {
     },
     wsHandler: async (socket, req) => {
       try {
-        console.log("connection");
         const server = req.server;
 
         const cookieHeader = req.headers.cookie || "";
@@ -68,8 +73,7 @@ export const wsRoutes = fp((fastify: FastifyInstance) => {
 
         playerSessionTokens.push(token);
 
-        const joinData: JoinPlayerResponse__Output =
-          await server.rpc.joinPlayer(token);
+        const joinData: JoinPlayerResponse = await server.rpc.joinPlayer(token);
 
         req.name = joinData.name!;
         req.sid = nextId++;
@@ -92,22 +96,22 @@ export const wsRoutes = fp((fastify: FastifyInstance) => {
 
         socket.on("message", (msg: Uint8Array, isunary: boolean) => {
           try {
-            const data = game.ClientMessage.decode(msg);
-            const valid = clientMessageValidate(data);
+            const data = fromBinary(game.ClientMessageSchema, msg);
+            console.log(data);
 
-            if (!valid) {
-              socket.close();
+            if (!validation.validate(game.ClientMessageSchema, data)) {
+              socket.close(4002, "Message validation failure");
+              return;
             }
 
-            const keys = Object.keys(data);
-
-            for (const key of keys) {
-              const handler = messageHandlers[key];
-              if (handler != undefined) handler(req, data);
-              else req.log.error(`Unregistered message handler ${key}`);
+            const handler = messageHandlers[data.pkg.case!];
+            if (handler != undefined) {
+              handler(req, data.pkg.value);
+            } else {
+              req.log.error(`Unregistered message handler ${data.pkg.case!}`);
             }
           } catch (e) {
-            console.error(e);
+            req.log.error(e);
           }
         });
 
@@ -116,7 +120,7 @@ export const wsRoutes = fp((fastify: FastifyInstance) => {
           server.engine.leave(req.name, req.sid);
         });
       } catch (e) {
-        console.error(e);
+        req.log.error(e);
         req.log.error(e, "WS Auth Error");
         socket.close(1011, "Internal Server Error");
       }

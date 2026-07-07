@@ -65,15 +65,15 @@ declare module "fastify" {
     role: Role__Output;
   }
 
-  interface TrasnferDecotraion {
+  interface TrasnferDecoration {
     getClientsCount: () => number;
     sendPackageToClient: (clientId: number, buffer: Buffer) => void;
-    getClients: () => Map<number, TransfertClient>;
+    getClients: () => Map<number, TransferClient>;
     addClient: (clientId: number, socket: WebSocket, input: Input) => void;
     remClient: (clientId: number) => void;
   }
 
-  export interface TransfertClient {
+  export interface TransferClient {
     socket: WebSocket;
     input: Input;
   }
@@ -83,6 +83,6 @@ declare module "fastify" {
     env: EnvDecoration;
     storage: StorageDecoration;
     engine: EngineDecoration;
-    transfer: TrasnferDecotraion;
+    transfer: TrasnferDecoration;
   }
 }

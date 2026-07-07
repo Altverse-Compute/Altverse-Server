@@ -7,7 +7,7 @@ import { wsRoutes } from "@routes/websocket";
 import dotenv from "dotenv";
 import cors from "@fastify/cors";
 import weboscket from "@fastify/websocket";
-import transferPlugin from "@/plugins/transfer"
+import transferPlugin from "@/plugins/transfer";
 import { clientWorldsPlugin } from "@routes/worlds";
 
 dotenv.config();
@@ -33,8 +33,8 @@ console.log(`
 
   await app.register(weboscket, {
     options: {
-      maxPayload: 1024 * 12
-    }
+      maxPayload: 1024 * 12,
+    },
   });
   await app.register(cors, {
     origin: app.env.frontendUrl,
@@ -63,9 +63,9 @@ console.log(`
     }
     const packages = app.engine.tick();
     for (const [id, client] of clients) {
-        const pkg = packages[id]!;
-        if (pkg) app.transfer.sendPackageToClient(id, pkg)
-      }
+      const pkg = packages[id]!;
+      if (pkg) app.transfer.sendPackageToClient(id, pkg);
+    }
     setTimeout(tick, 1000 / app.env.tickRate);
   };
   tick();

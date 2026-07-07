@@ -1,98 +1,103 @@
 import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
-import type { GameClient } from "@proto/ts/connection/Game.ts";
-import grpc from "@grpc/grpc-js";
-import { loadSync } from "@grpc/proto-loader";
-import path from "path";
-import type { ProtoGrpcType } from "@proto/ts/rpc.ts";
-import { awardPlayer } from "@/plugins/rpc/decorators/awardplayer.ts";
-import { joinPlayer } from "@/plugins/rpc/decorators/joinplayer.ts";
+import { createGrpcTransport } from "@connectrpc/connect-node";
+import { Game } from "@proto/rpc_pb";
+import { createClient } from "@connectrpc/connect";
 
-const metadata = new grpc.Metadata();
+let session = "";
 
 async function rpcPlugin(fastify: FastifyInstance) {
   let ready = false;
 
-  const protoPath = path.join("./src/proto/proto/rpc.proto");
+  const transport = createGrpcTransport({
+    baseUrl: fastify.env.rpcHost,
+  });
 
-  const pkg = loadSync(protoPath, {});
-
-  const proto = (grpc.loadPackageDefinition(pkg) as unknown as ProtoGrpcType)
-    .connection;
-
-  let credentials: grpc.ChannelCredentials;
-  if (fastify.env.dev) credentials = grpc.ChannelCredentials.createInsecure();
-  else {
-    const certificates = fastify.storage.certs;
-
-    credentials = grpc.ChannelCredentials.createSsl(
-      certificates.caCrt,
-      certificates.clientKey,
-      certificates.clientCrt,
-    );
-  }
-
-  const client = new proto.Game(
-    fastify.env.rpcHost,
-    credentials,
-    {},
-  ) as GameClient;
+  const client = createClient(Game, transport);
 
   const pingInterval = () => {
-    client.Ping(
-      {
-        online: fastify.transfer.getClientsCount(),
-        alive: true,
-      },
-      metadata,
-      (err, _) => {
+    client
+      .ping(
+        {
+          online: fastify.transfer.getClientsCount(),
+          alive: true,
+        },
+        {
+          headers: {
+            "Alt-Authenticate": session,
+          },
+        },
+      )
+      .then((value) => {})
+      .catch((err) => {
         if (err) {
           fastify.log.error({
+            type: "Ping",
             message: err.message,
             code: err.code,
           });
           throw err;
         }
-      },
-    );
+      });
   };
 
-  client.waitForReady(new Date(Date.now() + 1 * 5000), (error) => {
-    if (error) {
-      fastify.log.error(error);
-      throw error;
-    }
-    console.log("RPC was connected. Trying to authenticate...");
-    setInterval(pingInterval, fastify.env.rpcPingInterval);
-    ready = true;
-    client.Authentication(
-      {
-        token: fastify.env.rpcToken,
-        id: fastify.env.rpcId,
-      },
-      (err, response) => {
-        if (err) {
-          fastify.log.error(err);
-          throw err;
-        }
-        if (response) {
-          console.log({
-            rpcStatus: "authenticated",
-            session: response!.session!,
-          });
-          metadata.add("token", response!.session!);
-          fastify.log.info({
-            authentication: true,
-            session: response!.session!,
-          });
-        }
-      },
-    );
+  ready = true;
+
+  const authResp = await client.authentication({
+    token: fastify.env.rpcToken,
+    id: fastify.env.rpcId,
   });
+  if (authResp) {
+    session = authResp.session;
+    fastify.log.info({
+      authentication: true,
+      session: authResp.session,
+    });
+  }
+  setInterval(() => pingInterval(), fastify.env.rpcPingInterval);
 
   fastify.decorate("rpc", {
-    awardPlayer: awardPlayer(fastify, client, metadata),
-    joinPlayer: joinPlayer(fastify, client, metadata),
+    async awardPlayer(id: string, vp: number, accessory: string) {
+      await client.awardPlayer(
+        {
+          id,
+          vp,
+          accessory,
+        },
+        {
+          headers: {
+            "Alt-Authenticate": session,
+          },
+        },
+      );
+      fastify.log.info({
+        award: {
+          databaseId: id,
+          vp,
+          accessory,
+        },
+      });
+    },
+    async joinPlayer(token) {
+      const response = await client.joinPlayer(
+        {
+          token,
+        },
+        {
+          headers: {
+            "Alt-Authenticate": session,
+          },
+        },
+      );
+      fastify.log.info({
+        join: {
+          username: response.name,
+          id: response.id,
+          role: response.role,
+        },
+      });
+      return response;
+    },
   });
 }
 

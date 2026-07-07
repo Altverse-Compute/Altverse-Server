@@ -2,7 +2,8 @@ import type { FastifyInstance } from "fastify";
 import fs from "fs";
 import path from "path";
 import fp from "fastify-plugin";
-import { http } from "@proto/js";
+import * as http from "@proto/http_pb";
+import { create, toBinary } from "@bufbuild/protobuf";
 
 const storagePlugin = (fastify: FastifyInstance) => {
   if (!fs.existsSync(fastify.env.storagePath)) {
@@ -34,10 +35,10 @@ const storagePlugin = (fastify: FastifyInstance) => {
     return Buffer.from([]);
   };
 
-  const loadWorldsToSend = (): http.IWorldsResponse => {
-    let response: http.IWorldsResponse = {
+  const loadWorldsToSend = (): http.WorldsResponse => {
+    let response = create(http.WorldsResponseSchema, {
       worlds: {},
-    };
+    });
 
     const areaFields = ["text", "win", "vp"];
 
@@ -46,8 +47,11 @@ const storagePlugin = (fastify: FastifyInstance) => {
         fs.readFileSync(path.join(worldsPath, i)).toString(),
       );
 
-      let properties: http.IWorldProperties = world.client;
-      let areas: Record<string, http.IAreaResponse> = {};
+      let properties: http.WorldProperties = create(
+        http.WorldPropertiesSchema,
+        world.client,
+      );
+      let areas: Record<string, http.AreaResponse> = {};
 
       for (let i = 0; i < world.areas.length; i++) {
         const area = world.areas[i];
@@ -58,11 +62,15 @@ const storagePlugin = (fastify: FastifyInstance) => {
         }
 
         if (Object.keys(fields).length !== 0) {
-          areas[i] = fields;
+          areas[i] = {
+            $typeName: "altverse.game.http.v1.AreaResponse",
+            ...fields,
+          };
         }
       }
 
       response.worlds![world.name] = {
+        $typeName: "altverse.game.http.v1.WorldResponse",
         properties,
         areas,
       };
@@ -81,9 +89,7 @@ const storagePlugin = (fastify: FastifyInstance) => {
       clientKey: loadCert(fastify.env.clientKey),
       clientCrt: loadCert(fastify.env.clientCert),
     },
-    worldsToSend: new Uint8Array(
-      http.WorldsResponse.encode(worldsToSend).finish().buffer,
-    ),
+    worldsToSend: toBinary(http.WorldsResponseSchema, worldsToSend),
   });
 };
 

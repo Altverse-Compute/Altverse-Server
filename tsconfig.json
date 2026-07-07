@@ -22,7 +22,7 @@
     "baseUrl": ".",
     "types": ["bun", "node", "ws", "uuid", "@fastify/websocket"],
     "paths": {
-      "@proto/*": ["src/proto/generated/*"],
+      "@proto/*": ["src/proto/gen/*"],
       "@compute/*": ["src/compute/*"],
       "@plugins/*": ["src/plugins/*"],
       "@routes/*": ["src/routes/*"],
